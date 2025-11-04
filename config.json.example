@@ -1,0 +1,12 @@
+{
+    "build_dir": "core/build/Release",
+    "cuda_bin": "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.9/bin",
+    "jobs_dir": "jobs",
+    "server": {
+        "host": "127.0.0.1",
+        "port": 8000
+    },
+    "logging": {
+        "level": "INFO"
+    }
+}

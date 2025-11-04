@@ -1,0 +1,35 @@
+# Build directories
+build/
+out/
+assets/
+jobs/
+
+# Visual Studio Code
+.vscode/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Generated files
+*.ptx
+*.exe
+*.obj
+*.pdb
+*.ilk
+
+# CUDA compiled files
+*.fatbin
+*.cubin
+
+# Temporary files
+*.tmp
+*.log
+
+# Config jobs and build 
+config.json
+config.local.json
+jobs/
+core/build/
