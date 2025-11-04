@@ -6,12 +6,12 @@ Users edit config.json - no environment variables needed!
 import json
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 CONFIG_FILE = PROJECT_ROOT / "config.json"
 
 # Default configuration
 DEFAULT_CONFIG = {
-    "build_dir": str(PROJECT_ROOT / "core" / "build" / "Release"),
+    "build_dir": str(PROJECT_ROOT / "build"),
     "cuda_bin": "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.9/bin",
     "jobs_dir": str(PROJECT_ROOT / "jobs"),
     "server": {"host": "127.0.0.1", "port": 8000},

@@ -1,5 +1,5 @@
 import os
-from core.python import usd_io, engine
+import usd_io, engine
 
 
 def analyze_solar_scene(usd_path, output_path=None):

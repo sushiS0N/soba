@@ -4,14 +4,6 @@ from ladybug.location import Location
 from ladybug.sunpath import Sunpath
 import ladybug.analysisperiod as ap
 
-
-def vec_to_np(vectors):
-    for vec in vectors:
-        x, y, z = vec.x, vec.y, vec.z
-        # intensity = 1.0
-        f.write(f"{x:0.6f} {y:0.6f} {z:0.6f}\n")
-
-
 def get_sun_vectors(
     epw_file, month_start, month_end, day_start, day_end, hour_start, hour_end, timestep
 ):

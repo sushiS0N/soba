@@ -18,7 +18,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from core import config
 
 from integrations.maya.python import usd_exporter as usde
-from integrations.maya.python import SolarAnalysisClient
+from integrations.maya.python import client
 
 
 def get_selected_meshes():
@@ -70,7 +70,7 @@ class SolarMayaUI(QtWidgets.QWidget):
         self.context_meshes = []
         self.epw_path = None
         self.solar_params = None
-        self.analysis_client = SolarAnalysisClient(
+        self.analysis_client = client.SolarAnalysisClient(
             server_url=(f"http://{config.SERVER_HOST}:{config.SERVER_PORT}"),
             status_callback=self.on_status_update,
         )

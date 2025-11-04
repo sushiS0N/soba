@@ -18,13 +18,21 @@ set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
 # Find required packages
 find_package(CUDAToolkit REQUIRED)
+find_package(Python 3.11 COMPONENTS Interpreter Development REQUIRED)
 
-# Set python and pybind paths
-set(Python_EXECUTABLE "C:/Users/wTxT/miniconda3/envs/solar/python.exe")
-set(Python_FIND_STRATEGY LOCATION)
-find_package(Python 3.11.4 EXACT COMPONENTS Interpreter Development REQUIRED)
+# Auto-detect pybind11 location from Python
+if(NOT pybind11_DIR)
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import pybind11; print(pybind11.get_cmake_dir())"
+        OUTPUT_VARIABLE pybind11_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(pybind11_DIR)
+        message(STATUS "Auto-detected pybind11: ${pybind11_DIR}")
+    endif()
+endif()
 
-set(pybind11_DIR "C:/Users/wTxT/miniconda3/envs/solar/Lib/site-packages/pybind11/share/cmake/pybind11")
 find_package(pybind11 REQUIRED)
 
 # Find OptiX
@@ -38,6 +46,9 @@ if(NOT OptiX_INCLUDE_DIR)
     message(FATAL_ERROR "OptiX not found. Please set OptiX_INSTALL_DIR to your OptiX installation directory")
 endif()
 
+# Set CPP directory
+set(CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/core/cpp)
+
 # Set compiler flags
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
@@ -50,13 +61,13 @@ set(CMAKE_CUDA_ARCHITECTURES "75;86;89")
 
 # ===== Python Module =====
 pybind11_add_module(solar_engine_optix
-    python_bindings.cpp
-    optix_solar.cu
+    core/cpp/python_bindings.cpp
+    core/cpp/optix_solar.cu
     ${HEADER_FILES}
 )
 
 target_include_directories(solar_engine_optix PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CPP_DIR}
     ${OptiX_INCLUDE_DIR}
     ${CUDAToolkit_INCLUDE_DIRS}
 )
@@ -67,7 +78,7 @@ target_link_libraries(solar_engine_optix PRIVATE
 )
 
 target_compile_definitions(solar_engine_optix PRIVATE
-    $<$<COMPILE_LANGUAGE:CUDA>:EPSILON=1e-6f>
+    $<$<COMPILE_LANGUAGE:CUDA>:EPSILON=1e-7f>
 )
 
 set_target_properties(solar_engine_optix PROPERTIES
@@ -82,15 +93,15 @@ add_custom_command(
     COMMAND ${CMAKE_CUDA_COMPILER} 
         --ptx 
         -arch=sm_75
-        -I"${CMAKE_CURRENT_SOURCE_DIR}" 
+        -I"${CPP_DIR}" 
         -I"${OptiX_INCLUDE_DIR}"
         -I"${CUDAToolkit_INCLUDE_DIRS}"
-        -DEPSILON=1e-6f
+        -DEPSILON=1e-7f
         --use_fast_math
         --relocatable-device-code=true
-        "${CMAKE_CURRENT_SOURCE_DIR}/optix_programs.cu" 
+        "${CPP_DIR}/optix_programs.cu" 
         -o "${CMAKE_CURRENT_BINARY_DIR}/optix_programs.ptx"
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/optix_programs.cu
+    DEPENDS ${CPP_DIR}/optix_programs.cu
     COMMENT "Generating PTX files for OptiX"
     VERBATIM
 )

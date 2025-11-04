@@ -3,6 +3,7 @@ build/
 out/
 assets/
 jobs/
+.vscode/
 
 # Visual Studio Code
 .vscode/

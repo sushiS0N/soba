@@ -334,7 +334,7 @@ void gpu_solar_analysis_series_optix(
     std::cout << "Face count: " << face_count << ", Sun count: " << sun_count << std::endl;
 
     auto init_end = std::chrono::high_resolution_clock::now();
-    int init_time = std::chrono::duration_cast<std::chrono::milliseconds>(init_end - start).count();
+    auto init_time = std::chrono::duration_cast<std::chrono::milliseconds>(init_end - start).count();
     std::cout << "OptiX init: " << init_time << "ms\n";
 
     // Launch rays
@@ -342,13 +342,13 @@ void gpu_solar_analysis_series_optix(
     launch_solar_rays(optix, d_centroids, d_normals, d_sun_dirs, d_results, face_count, sun_count, ray_offset);
 
     auto ray_end = std::chrono::high_resolution_clock::now();
-    int ray_time = std::chrono::duration_cast<std::chrono::microseconds>(ray_end - ray_start).count();
+    auto ray_time = std::chrono::duration_cast<std::chrono::microseconds>(ray_end - ray_start).count();
     std::cout << "OptiX tracing: " << ray_time << "μs (" << ray_time / 1000.0f << "ms)\n";
 
     // Get results
     results.resize(face_count);
     CUDA_CHECK(cudaMemcpy(results.data(), d_results, face_count * sizeof(float), cudaMemcpyDeviceToHost));
-   
+
     std::cout << "DEBUG: After memcpy, first 5 results: ";
     for (int i = 0; i < std::min(5, face_count); i++)
     {

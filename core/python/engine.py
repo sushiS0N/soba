@@ -6,27 +6,27 @@ import numpy as np
 import os
 import sys
 from pathlib import Path
+import importlib.util
 import ctypes
 import time
 
 from pxr import Usd, UsdGeom, Sdf, Gf
 
 # Add parent directories to path for imports
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-import core.python.weather as lb
+import weather as lb
 import config
-
 
 def setup_optix_module():
     """
     One-time setup to load OptiX module with all dependencies
     Returns the loaded module
     """
-    # Paths (adjust these for your system)
-    BUILD_DIR = config.BUILD_DIR
-    CUDA_BIN = config.CUDA_BIN
+    # Paths 
+    BUILD_DIR = str(config.BUILD_DIR)
+    CUDA_BIN = str(config.CUDA_BIN)
 
     # Add CUDA to PATH
     os.environ["PATH"] = CUDA_BIN + os.pathsep + os.environ.get("PATH", "")
@@ -48,9 +48,22 @@ def setup_optix_module():
     if not cuda_loaded:
         raise RuntimeError("Failed to load CUDA runtime DLL")
 
-    # Add build directory to path
-    if BUILD_DIR not in sys.path:
-        sys.path.insert(0, BUILD_DIR)
+    
+    # # Add build directory to path
+    # if BUILD_DIR not in sys.path:
+    #     sys.path.insert(0, BUILD_DIR)
+    # print(f"sys.path[0]: {sys.path[0]}")
+
+    # # Change to build directory (for PTX file)
+    # original_cwd = os.getcwd()
+    # os.chdir(BUILD_DIR)
+
+    # Find the .pyd file
+    pyd_files = list(Path(BUILD_DIR).glob("solar_engine_optix*.pyd"))
+    if not pyd_files:
+        raise FileNotFoundError(f"solar_engine_optix.pyd not found in {BUILD_DIR}")
+    
+    pyd_path = pyd_files[0]
 
     # Change to build directory (for PTX file)
     original_cwd = os.getcwd()
@@ -58,10 +71,19 @@ def setup_optix_module():
 
     # Import module
     try:
-        import solar_engine_optix
-
-        print(f" Loaded solar_engine_optix v{solar_engine_optix.__version__}")
+        # Load module directly without modifying sys.path
+        spec = importlib.util.spec_from_file_location("solar_engine_optix", pyd_path)
+        solar_engine_optix = importlib.util.module_from_spec(spec)
+        
+        # Register in sys.modules so subsequent imports work
+        sys.modules["solar_engine_optix"] = solar_engine_optix
+        
+        # Execute the module
+        spec.loader.exec_module(solar_engine_optix)
+        
+        print(f"✓ Loaded solar_engine_optix v{solar_engine_optix.__version__}")
         return solar_engine_optix
+    
     except ImportError as e:
         print(f" Failed to import solar_engine_optix: {e}")
         raise
@@ -150,12 +172,7 @@ def run_optix_analysis(scene_data, optix_module):
 
 
 if __name__ == "__main__":
-    # Test the pipeline
-    usd_path = r"C:/Users/wTxT/Documents/maya/2025/scripts/SolarAnalysis/temp/solar_analysis.usda"
-
-    if not os.path.exists(usd_path):
-        print(f" USD file not found: {usd_path}")
-        sys.exit(1)
-
+    
     optix_module = setup_optix_module()
-    results = run_optix_analysis(usd_path, optix_module)
+    print(optix_module)
+    #results = run_optix_analysis(usd_path, optix_module)

@@ -4,7 +4,7 @@ import shutil
 import csv
 import numpy as np
 
-import core.python.weather as lb
+import weather as lb
 
 
 def parse_solar_params(params_str):
@@ -298,5 +298,4 @@ if __name__ == "__main__":
     usd_path = r"C:/Users/wTxT/Documents/maya/2025/scripts/SolarAnalysis\temp\solar_analysis.usda"
 
     readUSD = read_solar_usd(usd_path)
-    results = sa.run_optix_analysis(readUSD)
-    print(results)
+    print(readUSD)
