@@ -3,16 +3,20 @@ build/
 out/
 assets/
 jobs/
-.vscode/
 
-# Visual Studio Code
+# IDE
 .vscode/
+.idea/
+*.sublime-*
+*.swp
+*.swo
 
 # CMake
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
+CMakeUserPresets.json
 
 # Generated files
 *.ptx
@@ -29,10 +33,40 @@ Makefile
 *.tmp
 *.log
 
-# Config jobs and build 
+# Config and user data
 config.json
 config.local.json
 jobs/
-core/build/__pycache__/
-*.pyc
-*.pyo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Security
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# OS
+.DS_Store
+Thumbs.db

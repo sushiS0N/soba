@@ -81,7 +81,7 @@ class SolarMayaUI(QtWidgets.QWidget):
         self.btn_target = self.widget.findChild(QtWidgets.QPushButton, "btn_target")
         self.btn_context = self.widget.findChild(QtWidgets.QPushButton, "btn_context")
         self.btn_run = self.widget.findChild(QtWidgets.QPushButton, "btn_run")
-        self.btn_bake = self.widget.findChild(QtWidgets.QPushButton, "btn_bake")
+        # TODO: self.btn_reset = self.widget.findChild(QtWidgets.QPushButton, "btn_reset")
 
         # Line edits
         self.le_epw = self.widget.findChild(QtWidgets.QLineEdit, "le_epw")

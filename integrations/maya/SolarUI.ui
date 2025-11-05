@@ -582,7 +582,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="runBake_Lout" stretch="5,5">
+     <layout class="QHBoxLayout" name="runBake_Lout" stretch="0">
       <property name="spacing">
        <number>5</number>
       </property>
@@ -611,19 +611,6 @@
         </property>
         <property name="text">
          <string>Run</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="bakeButton">
-        <property name="minimumSize">
-         <size>
-          <width>75</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Bake</string>
         </property>
        </widget>
       </item>
