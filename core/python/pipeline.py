@@ -60,7 +60,7 @@ def analyze_solar_scene(usd_path, output_path=None):
     print("\n" + "=" * 70)
     print("🎉 PIPELINE COMPLETE!")
     print("=" * 70)
-
+    
     return output_path
 
 

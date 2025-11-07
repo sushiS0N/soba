@@ -36,7 +36,6 @@ app = FastAPI(title="Solar Analysis Server")
 JOBS_DIR = config.JOBS_DIR
 JOBS_DIR.mkdir(exist_ok=True)
 
-print(JOBS_DIR)
 jobs: Dict[str, dict] = {}
 
 
