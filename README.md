@@ -45,11 +45,11 @@ SOBA's architecture evolved through three major iterations, each solving specifi
 
 ### V1: Standalone C++ Engine
 - **Implementation**: a standalone console application using Möller–Trumbore's algorithm
-- **Bottleneck**: execution time was prohibitive for fast design iterarions - Big O(rays * primitives). Lacked integration with DCC
+- **Bottleneck**: execution time was prohibitive for fast design iterations - Big O(rays * primitives). Lacked integration with DCC
 
 ### V2: Maya-Integrated CUDA
 - **Implementation**: refactored the engine to use CUDA and integrated Teo Karra’s GPU BVH directly into the Maya process - average Big O(logM)
-- **The critical faliure**: wile performance improved, integrating the CUDA context directly into Maya's process caused instability. Specifically, OptiX context creation clashed with Maya's internal OpenGL viewport context, leading to driver timeouts and crashes even when threaded
+- **The critical failure**: while performance improved, integrating the CUDA context directly into Maya's process caused instability. Specifically, OptiX context creation clashed with Maya's internal OpenGL viewport context, leading to driver timeouts and crashes even when threaded
   
 ### V3: Server-Based Architecture (Current)
 - **Implementation**: I separated the rendering engine into an independent process managed by a FastAPI server. This allowed OptiX to work as a standalone engine avoiding conflicts with future DCC's integrations.
@@ -66,7 +66,7 @@ While a custom CUDA kernel offers control, maintaining a high-performance Boundi
 -**Optimized Traversal**: OptiX provides state-of-the-art BVH construction and traversal algorithms out-of-the-box, significantly outperforming my initial custom CUDA BVH implementation for scenes with millions of triangles. Stack allocation in OptiX is driven by the ray recursion depth compared to the manual one in CUDA.
 
 **Why OpenUSD?**
-USD is becoming the industry standard for cross-platform geometry exchange (Blender, Omniverse, Houdini, Katana). By committing to USD, SOBA can integrate with multiple DCCs without custom exporters for each. The learning curve was steep, but the interoperability payoff is significant. I could inject the analysis parameters(solar:sunHours, solar:epwFile) directly into the stage metadata without breaking the geometry schema or sending multiple files
+USD is becoming the industry standard for cross-platform geometry exchange (Blender, Omniverse, Houdini, Katana). By committing to USD, SOBA can integrate with multiple DCCs without custom exporters for each. The learning curve was steep, but the interoperability payoff is significant. I could inject the analysis parameters (solar:sunHours, solar:epwFile) directly into the stage metadata without breaking the geometry schema or sending multiple files
 
 **Why Server-Based?**
 FastAPI provides job queue management, automatic API documentation, and async request handling with minimal code. Beyond solving the context crash, the server architecture allows for Scalability. The compute engine can be deployed headless, allowing designers on lightweight laptops to request heavy solar analysis jobs via the REST API.
