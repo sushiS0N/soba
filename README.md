@@ -1,9 +1,9 @@
 # SOBA
 
-SOBA - Solar Analysis Engine
+SOBA - GPU-Accelerated Solar Analysis Engine
 A GPU-accelerated solar analysis system for architectural design workflows, built with NVIDIA OptiX and OpenUSD.
 Overview
-SOBA is a modular, server-based daylight analysis tool designed for architectural visualization pipelines. It provides fast, accurate solar exposure calculations using GPU ray tracing, with seamless integration into Maya, Rhino, and NVIDIA Omniverse through OpenUSD.
+SOBA is a modular, server-based daylight analysis system designed to replace CPU workflows in high-throughput architectural pipelines. It leverages NVIDIA OptiX for hardware-accelerated ray tracing and OpenUSD for robust, cross-platform geometry interchange.
 
 Key Features:
 - GPU-Accelerated: NVIDIA OptiX ray tracing for high-performance analysis
@@ -13,26 +13,46 @@ Key Features:
 - Visualization: Built-in Ecotect-style color mapping for results
 - Production-Ready: Designed for fast-paced architectural production environments
 
-System Architecture: Maya UI  <──USD──>  FastAPI <──USD──>  OptiX    
+## System Architecture: Maya UI  <──USD──>  FastAPI <──USD──>  OptiX    
+The system decouples the heavy compute capability from the DCC (Digital Content Creation) viewport using a microservices architecture. This prevents the "frozen UI" problem common in single-threaded analysis tools and resolves critical OpenGL/CUDA context conflicts.
 ![DiagramHQ_invert](https://github.com/user-attachments/assets/c3f2f998-7512-4799-80d7-cc83a9388d65)
+
+## Data Flow Pipeline
+1. **Client (Maya/Rhino)**: The Python client extracts geometry and analysis parameters (EPW weather data, date/time ranges).
+
+2. **Serialization (OpenUSD)**: Data is composed into a USD stage. Mesh data is flattened, and analysis parameters are injected as custom stage metadata.
+
+3. **Transport (FastAPI)**: The USD payload is sent asynchronously to the analysis server.
+
+4. **Compute (C++/OptiX)**:
+
+- The server deserializes the USD stage.
+
+- Geometry is uploaded to the GPU
+
+- Custom OptiX kernels perform ray-traced solar exposure calculations.
+
+5. **Result**: Results are written back into the USD file as displayColor primvars and returned to the client for immediate visualization.
 
 The system consists of three main components:
 1. **Maya Plugin** (`solarUI.py`): User interface and USD export
 2. **FastAPI Server** (`server.py`): Job management and queue processing
 3. **OptiX Engine** (`optix_engine.py`): GPU-accelerated ray tracing
 
-## Technical Evolution
+## Technical Evolution and Challenges
 
 SOBA's architecture evolved through three major iterations, each solving specific production bottlenecks:
 
 ### V1: Standalone C++ Engine
-Initial proof-of-concept with direct geometry loading and CPU-based ray tracing. Worked well for testing but required manual file conversion and lacked integration with design workflows.
+- **Implementation**: a standalone console application using Möller–Trumbore's algorithm
+- **Bottleneck**: execution time was prohibitive for fast design iterarions - Big O(rays * primitives). Lacked integration with DCC
 
 ### V2: Maya-Integrated CUDA
-After refactoring the engine with CUDA I integrated Teo Karra's GPU BVH to make it faster. This eliminated the export step but encountered a critical issue: the system was very cumbersome to setup and unstable at times. As OptiX can be up to 40% faster than production CUDA code, I tried integrating it but its context was clashing with Maya's own OpenGL, even when loding it into another thread.
-
+- **Implementation**: refactored the engine to use CUDA and integrated Teo Karra’s GPU BVH directly into the Maya process - average Big O(logM)
+- **The critical faliure**: wile performance improved, integrating the CUDA context directly into Maya's process caused instability. Specifically, OptiX context creation clashed with Maya's internal OpenGL viewport context, leading to driver timeouts and crashes even when threaded
+  
 ### V3: Server-Based Architecture (Current)
-Separated the ray tracing engine into an independent server process, solving the context conflict while adding several production benefits:
+- **Implementation**: I separated the rendering engine into an independent process managed by a FastAPI server. This allowed OptiX to work as a standalone engine avoiding conflicts with future DCC's integrations.
 - **Non-blocking workflow**: Maya remains responsive during analysis
 - **Centralized processing**: Multiple designers can queue jobs without local GPU requirements
 - **Data persistence**: Results stored in database for training ML models and performance benchmarking
@@ -40,21 +60,23 @@ Separated the ray tracing engine into an independent server process, solving the
 
 ### Key Technical Decisions
 
-**Why OptiX over native CUDA?**
-OptiX provides highly optimized BVH construction and traversal out-of-the-box and directly uses the RT-cores. For architectural scenes with millions of triangles, reaching the same performance with highly optimized CUDA code would be extremely challenging.
+**Why OptiX over vanilla CUDA?**
+While a custom CUDA kernel offers control, maintaining a high-performance Bounding Volume Hierarchy (BVH) is non-trivial. SOBA utilizes OptiX to leverage:
+-**Hardware Acceleration**: direct utilization of RT (Ray Tracing) cores on RTX architecture.
+-**Optimized Traversal**: OptiX provides state-of-the-art BVH construction and traversal algorithms out-of-the-box, significantly outperforming my initial custom CUDA BVH implementation for scenes with millions of triangles. Stack allocation in OptiX is driven by the ray recursion depth compared to the manual one in CUDA.
 
 **Why OpenUSD?**
-USD is becoming the industry standard for cross-platform geometry exchange (Blender, Omniverse, Houdini, Katana). By committing to USD, SOBA can integrate with multiple DCCs without custom exporters for each. The learning curve was steep, but the interoperability payoff is significant.
+USD is becoming the industry standard for cross-platform geometry exchange (Blender, Omniverse, Houdini, Katana). By committing to USD, SOBA can integrate with multiple DCCs without custom exporters for each. The learning curve was steep, but the interoperability payoff is significant. I could inject the analysis parameters(solar:sunHours, solar:epwFile) directly into the stage metadata without breaking the geometry schema or sending multiple files
 
-**Why FastAPI over raw sockets?**
-FastAPI provides job queue management, automatic API documentation, and async request handling with minimal code. This lets us focus on the ray tracing engine rather than building HTTP infrastructure.
-
+**Why Server-Based?**
+FastAPI provides job queue management, automatic API documentation, and async request handling with minimal code. Beyond solving the context crash, the server architecture allows for Scalability. The compute engine can be deployed headless, allowing designers on lightweight laptops to request heavy solar analysis jobs via the REST API.
 
 ## Requirements
 
-### Software
+### Stack
 - **Maya 2025** (or compatible version with USD support)
-- **Python 3.11+**
+- **Python 3.11**
+- **C++17**
 - **CUDA Toolkit 12.9**
 - **NVIDIA OptiX SDK 9.0.0**
 - **CMake 3.18+**
