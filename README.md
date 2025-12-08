@@ -21,6 +21,35 @@ The system consists of three main components:
 2. **FastAPI Server** (`server.py`): Job management and queue processing
 3. **OptiX Engine** (`optix_engine.py`): GPU-accelerated ray tracing
 
+## Technical Evolution
+
+SOBA's architecture evolved through three major iterations, each solving specific production bottlenecks:
+
+### V1: Standalone C++ Engine
+Initial proof-of-concept with direct geometry loading and CPU-based ray tracing. Worked well for testing but required manual file conversion and lacked integration with design workflows.
+
+### V2: Maya-Integrated CUDA
+After refactoring the engine with CUDA I integrated Teo Karra's GPU BVH to make it faster. This eliminated the export step but encountered a critical issue: the system was very cumbersome to setup and unstable at times. As OptiX can be up to 40% faster than production CUDA code, I tried integrating it but its context was clashing with Maya's own OpenGL, even when loding it into another thread.
+
+### V3: Server-Based Architecture (Current)
+Separated the ray tracing engine into an independent server process, solving the context conflict while adding several production benefits:
+- **Non-blocking workflow**: Maya remains responsive during analysis
+- **Centralized processing**: Multiple designers can queue jobs without local GPU requirements
+- **Data persistence**: Results stored in database for training ML models and performance benchmarking
+- **Scalability**: Can distribute compute across multiple GPU servers and easily add other analysis algorithms
+
+### Key Technical Decisions
+
+**Why OptiX over native CUDA?**
+OptiX provides highly optimized BVH construction and traversal out-of-the-box and directly uses the RT-cores. For architectural scenes with millions of triangles, reaching the same performance with highly optimized CUDA code would be extremely challenging.
+
+**Why OpenUSD?**
+USD is becoming the industry standard for cross-platform geometry exchange (Blender, Omniverse, Houdini, Katana). By committing to USD, SOBA can integrate with multiple DCCs without custom exporters for each. The learning curve was steep, but the interoperability payoff is significant.
+
+**Why FastAPI over raw sockets?**
+FastAPI provides job queue management, automatic API documentation, and async request handling with minimal code. This lets us focus on the ray tracing engine rather than building HTTP infrastructure.
+
+
 ## Requirements
 
 ### Software
