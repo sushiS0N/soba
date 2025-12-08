@@ -16,6 +16,7 @@ Key Features:
 System Architecture: Maya UI  <──USD──>  FastAPI <──USD──>  OptiX    
 
 The system consists of three main components:
+![DiagramHQ_invert](https://github.com/user-attachments/assets/c3f2f998-7512-4799-80d7-cc83a9388d65)
 
 1. **Maya Plugin** (`solarUI.py`): User interface and USD export
 2. **FastAPI Server** (`server.py`): Job management and queue processing
